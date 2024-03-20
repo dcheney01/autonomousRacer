@@ -31,13 +31,19 @@ class RealSense:
             depthSize = [640, 480]
         self.pipeline = rs.pipeline()
         config = rs.config()
-        config.enable_stream(rs.stream.color, rgbSize[0], rgbSize[1], rs.format.bgr8, 30)
+
+        config.enable_stream(rs.stream.color, rgbSize[0], rgbSize[1], rs.format.bgr8, 60)
         if enable_depth:
-            config.enable_stream(rs.stream.depth, depthSize[0], depthSize[1], rs.format.z16, 30)  
+            config.enable_stream(rs.stream.depth, depthSize[0], depthSize[1], rs.format.z16, 60)  
+        self.enable_depth = enable_depth
         config.enable_stream(rs.stream.accel, rs.format.motion_xyz32f, 250)
         config.enable_stream(rs.stream.gyro, rs.format.motion_xyz32f, 200)
+
         # Start streaming
-        self.pipeline.start(config)
+        prof = self.pipeline.start(config)
+        s = prof.get_device().query_sensors()[1]
+        s.set_option(rs.option.exposure, 125)
+
         self.colorizer = rs.colorizer()
         # Create alignment primitive with color as its target stream:
         self.align = rs.align(rs.stream.color)
@@ -71,6 +77,9 @@ class RealSense:
                 # Convert to numpy array
                 depth = cv2.normalize(~np.asanyarray(depth_frame.get_data()), None, 255, 0, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
                 #depth = np.asanyarray(self.colorizer.colorize(depth_frame).get_data())
+
+        if not self.enable_depth:
+            return (time.time(), rgb, None, accel, gyro)
         return(time.time(), rgb, depth, accel, gyro)
 
 

@@ -1,0 +1,72 @@
+# python3 ECEnRacer.py
+''' 
+This program is for ECEN-631 BYU Race
+*************** RealSense Package ***************
+From the Realsense camera:
+	RGB Data
+	Depth Data
+	Gyroscope Data
+	Accelerometer Data
+*************** Arduino Package ****************
+	Steer(int degree) : -30 (left) to +30 (right) degrees
+	Drive(float speed) : -3.0 to 3.0 meters/second
+	Zero(int PWM) : Sets front wheels going straight around 1500
+	Encoder() : Returns current encoder count.  Reset to zero when stop
+	Pid(int flag) : 0 to disable PID control, 1 to enable PID control
+	KP(float p) : Proporation control 0 ~ 1.0 : how fast to reach the desired speed.
+	KD(float d) : How smoothly to reach the desired speed.
+
+	EXTREMELY IMPORTANT: Read the user manual carefully before operate the car
+
+	# If you get cannot get frame error: use 'sudo pkill -9 python3.6' and wait 15 seconds
+**************************************
+'''
+
+# import the necessary packages
+from Arduino import Arduino
+from RealSense import *
+import cv2
+import os
+
+enableDepth = True
+rs = RealSense(RS_VGA, enableDepth)		# RS_VGA, RS_720P, or RS_1080P
+
+# Use $ ls /dev/tty* to find the serial port connected to Arduino
+Car = Arduino("/dev/ttyUSB0", 115200)                # Linux
+#Car = Arduino("/dev/tty.usbserial-2140", 115200)    # Mac
+
+Car.zero(1440)      # Set car to go straight.  Change this for your car.
+Car.pid(1)          # Use PID control
+
+(time_, rgb, depth, accel, gyro) = rs.getData(False)
+
+j = 0
+
+test_name = ""
+data_folder = f"../data/test_name-{time.strftime('%m-%d_%S')}"
+rgb_folder = f"{data_folder}/rgb"
+depth_folder = f"{data_folder}/depth"
+gyro_folder = f"{data_folder}/gyro"
+accel_folder = f"{data_folder}/accel"
+
+os.makedirs(rgb_folder, exist_ok=True)
+os.makedirs(depth_folder, exist_ok=True)
+os.makedirs(gyro_folder, exist_ok=True)
+os.makedirs(accel_folder, exist_ok=True)
+
+while(True):
+	Car.drive(1.5)
+	
+	(time_, img, depth, accel, gyro) = rs.getData(False)
+
+	cv2.imwrite(f"{data_folder}/img_{j}.jpg", img)
+	np.save(f"{data_folder}/depth_{j}.npy", depth)
+	np.save(f"{data_folder}/accel_{j}.npy", accel)
+	np.save(f"{data_folder}/gyro_{j}.npy", gyro)
+	
+	cv2.imshow("car", img)
+	if (cv2.waitKey(1) == ord('q')):
+		cv2.destroyAllWindows()
+		break
+	
+	j += 1

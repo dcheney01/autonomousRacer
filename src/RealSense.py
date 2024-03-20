@@ -18,12 +18,12 @@ RS_VGA = 0
 RS_720P = 1
 RS_1080P = 2
 class RealSense:
-    def __init__(self, Device, Resolution):
+    def __init__(self, Resolution, enable_depth=False):
          # configure rgb, depth, gyro, accel streams
         if Resolution == RS_720P:
             rgbSize = [1280, 720]
             depthSize = [1280, 720]
-       	elif Resolution == RS_1080P:
+        elif Resolution == RS_1080P:
             rgbSize = [1920, 1080]
             depthSize = [1280, 720]     # depth camera only allows upto 720P
         else:
@@ -32,7 +32,8 @@ class RealSense:
         self.pipeline = rs.pipeline()
         config = rs.config()
         config.enable_stream(rs.stream.color, rgbSize[0], rgbSize[1], rs.format.bgr8, 30)
-        config.enable_stream(rs.stream.depth, depthSize[0], depthSize[1], rs.format.z16, 30)      
+        if enable_depth:
+            config.enable_stream(rs.stream.depth, depthSize[0], depthSize[1], rs.format.z16, 30)  
         config.enable_stream(rs.stream.accel, rs.format.motion_xyz32f, 250)
         config.enable_stream(rs.stream.gyro, rs.format.motion_xyz32f, 200)
         # Start streaming
@@ -51,7 +52,7 @@ class RealSense:
     def accel_data(self, accel):
         return np.asarray([accel.x, accel.y, accel.z])
 
-    def getData (self):
+    def getData(self):
         # start realsense pipeline
         rsframes = self.pipeline.wait_for_frames()
         color_frame = rsframes.get_color_frame()

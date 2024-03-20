@@ -23,8 +23,8 @@ From the Realsense camera:
 '''
 
 # import the necessary packages
-from baseFiles.Arduino import Arduino
-from baseFiles.RealSense import *
+from Arduino import Arduino
+from RealSense import *
 import cv2
 from simple_pid import PID
 import lightning_mcqueen as lm

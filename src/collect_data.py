@@ -27,8 +27,9 @@ from Arduino import Arduino
 from RealSense import *
 import cv2
 import os
+import time
 
-enableDepth = True
+enableDepth = False
 rs = RealSense(RS_VGA, enableDepth)		# RS_VGA, RS_720P, or RS_1080P
 
 # Use $ ls /dev/tty* to find the serial port connected to Arduino
@@ -38,35 +39,39 @@ Car = Arduino("/dev/ttyUSB0", 115200)                # Linux
 Car.zero(1440)      # Set car to go straight.  Change this for your car.
 Car.pid(1)          # Use PID control
 
-(time_, rgb, depth, accel, gyro) = rs.getData(False)
+(time_, rgb, depth, accel, gyro) = rs.getData()
 
 j = 0
 
 test_name = ""
-data_folder = f"../data/test_name-{time.strftime('%m-%d_%S')}"
+data_folder = f"../data/{test_name}-{time.strftime('%m-%d_%S')}"
 rgb_folder = f"{data_folder}/rgb"
-depth_folder = f"{data_folder}/depth"
 gyro_folder = f"{data_folder}/gyro"
 accel_folder = f"{data_folder}/accel"
 
 os.makedirs(rgb_folder, exist_ok=True)
-os.makedirs(depth_folder, exist_ok=True)
 os.makedirs(gyro_folder, exist_ok=True)
 os.makedirs(accel_folder, exist_ok=True)
 
+print("Starting Data Collection")
+
 while(True):
+	start = time.time()
+
 	Car.drive(1.5)
 	
-	(time_, img, depth, accel, gyro) = rs.getData(False)
+	(time_, img, _, accel, gyro) = rs.getData()
 
-	cv2.imwrite(f"{data_folder}/img_{j}.jpg", img)
-	np.save(f"{data_folder}/depth_{j}.npy", depth)
-	np.save(f"{data_folder}/accel_{j}.npy", accel)
-	np.save(f"{data_folder}/gyro_{j}.npy", gyro)
+	# cv2.imwrite(f"{rgb_folder}/img_{j}.jpg", img)
+	# np.save(f"{depth_folder}/depth_{j}.npy", depth)
+	# np.save(f"{gyro_folder}/accel_{j}.npy", accel)
+	# np.save(f"{accel_folder}/gyro_{j}.npy", gyro)
 	
-	cv2.imshow("car", img)
-	if (cv2.waitKey(1) == ord('q')):
-		cv2.destroyAllWindows()
-		break
+	# cv2.imshow("car", img)
+	# if (cv2.waitKey(1) == ord('q')):
+	# 	cv2.destroyAllWindows()
+	# 	break
 	
-	j += 1
+	# j += 1
+
+	print(f"Loop: {time.time() - start} s")

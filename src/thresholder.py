@@ -89,14 +89,14 @@ cv.createTrackbar(high_V_name, window_detection_name , high_V, max_value, on_hig
 
 while True:
     ## [while]
-    ret, frame = cap.read()
-    # frame = cv.imread('./sim_testing_images/straight.png')
+    # ret, frame = cap.read()
+    frame = cv.imread('/home/daniel/software/autonomousRacer/data/first_lap/rgb/img_5.jpg')
     if frame is None:
         break
 
-    frame_HSV = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
-    frame_threshold = cv.inRange(frame_HSV, (low_H, low_S, low_V), (high_H, high_S, high_V))
-    blurred = cv.GaussianBlur(frame_threshold, (5,5),0)
+    # frame_HSV = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
+    blurred = cv.GaussianBlur(frame, (5,5),0)
+    blurred = cv.inRange(blurred, (low_H, low_S, low_V), (high_H, high_S, high_V))
     ## [while]
 
     ## [show]

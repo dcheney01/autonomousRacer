@@ -36,6 +36,8 @@ rs = RealSense(RS_VGA, enableDepth)		# RS_VGA, RS_720P, or RS_1080P
 Car = Arduino("/dev/ttyUSB0", 115200)                # Linux
 #Car = Arduino("/dev/tty.usbserial-2140", 115200)    # Mac
 
+time.sleep(3)
+
 Car.zero(1440)      # Set car to go straight.  Change this for your car.
 Car.pid(1)          # Use PID control
 
@@ -55,10 +57,11 @@ os.makedirs(accel_folder, exist_ok=True)
 
 print("Starting Data Collection")
 
+Car.drive(1.5)
+
 while(True):
 	start = time.time()
 
-	Car.drive(1.5)
 	
 	(time_, img, _, accel, gyro) = rs.getData()
 
@@ -66,11 +69,6 @@ while(True):
 	# np.save(f"{depth_folder}/depth_{j}.npy", depth)
 	# np.save(f"{gyro_folder}/accel_{j}.npy", accel)
 	# np.save(f"{accel_folder}/gyro_{j}.npy", gyro)
-	
-	# cv2.imshow("car", img)
-	# if (cv2.waitKey(1) == ord('q')):
-	# 	cv2.destroyAllWindows()
-	# 	break
 	
 	# j += 1
 

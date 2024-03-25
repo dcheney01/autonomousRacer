@@ -127,6 +127,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+python3.8-env/
 
 # Spyder project settings
 .spyderproject

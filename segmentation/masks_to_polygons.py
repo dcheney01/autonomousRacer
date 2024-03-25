@@ -1,11 +1,16 @@
 import os
-
+import splitfolders
 import cv2
 
 from tqdm import tqdm
 
 input_dir = './tmp/resized_masks'
+
+
 output_dir = './tmp/labels'
+if os.path.exists(output_dir) is False:
+    os.makedirs(output_dir)
+    os.makedirs("./tmp/images")
 
 for j in tqdm(os.listdir(input_dir)):
     image_path = os.path.join(input_dir, j)
@@ -39,3 +44,9 @@ for j in tqdm(os.listdir(input_dir)):
                     f.write('{} '.format(p))
 
         f.close()
+
+    
+input_fold_path = "./tmp"
+split_data_path = "./data/"
+splitfolders.ratio(input_fold_path, output=split_data_path,
+    seed=1337, ratio=(.8, .2, .0), group_prefix=None, move=False)

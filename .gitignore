@@ -170,3 +170,9 @@ cython_debug/
 
 /runs/
 /tmp/
+
+*.json
+*.yaml
+latest-run
+*.wandb
+events.*

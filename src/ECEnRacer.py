@@ -26,71 +26,56 @@ From the Realsense camera:
 from Arduino import Arduino
 from RealSense import *
 import cv2
-from simple_pid import PID
-import lightning_mcqueen as lm
-import detect_lane as dl
+import imagezmq
+# from simple_pid import PID
 
-enableDepth = True
-rs = RealSense("/dev/video2", RS_VGA, enableDepth)		# RS_VGA, RS_720P, or RS_1080P
-writer = None
+enableDepth = False
+rs = RealSense(RS_VGA, enableDepth)		# RS_VGA, RS_720P, or RS_1080P
 
 # Use $ ls /dev/tty* to find the serial port connected to Arduino
-Car = Arduino("/dev/ttyUSB0", 115200)                # Linux
+# Car = Arduino("/dev/ttyUSB0", 115200)                # Linux
 #Car = Arduino("/dev/tty.usbserial-2140", 115200)    # Mac
+time.sleep(3)
 
-Car.zero(1440)      # Set car to go straight.  Change this for your car.
-Car.pid(1)          # Use PID control
+# Car.zero(1440)      # Set car to go straight.  Change this for your car.
+# Car.pid(1)          # Use PID control
 
-(time_, rgb, depth, accel, gyro) = rs.getData(False)
-# cv2.namedWindow('RGB', cv2.WINDOW_NORMAL)
+(time_, rgb, depth, accel, gyro) = rs.getData()
 
-## SETUP PID Controller
-pid = PID()
-pid.Ki = -.01*0
-pid.Kd = -.01*0
-pid.Kp = -30/250 #degrees per pixel
-frameUpdate = 1
-pid.sample_time = frameUpdate/30.0
-pid.output_limits = (-30,30)
-desXCoord = rgb.shape[0]*3/5
-pid.setpoint = desXCoord
+sender = imagezmq.ImageSender(connect_to='tcp://10.32.114.243:5555')
+host_name = "LightningMcQueen"
 
-i = 1
-angle = 0
-FAST_SPEED = 1.3
-SLOW_SPEED = 0.5
-speed = FAST_SPEED
-blob_lost = False
-draw_bool = True
-centers = []
+# ## SETUP PID Controller
+# pid = PID()
+# pid.Ki = -.01*0
+# pid.Kd = -.01*0
+# pid.Kp = -30/250 #degrees per pixel
+# frameUpdate = 1
+# pid.sample_time = frameUpdate/30.0
+# pid.output_limits = (-30,30)
+# desXCoord = rgb.shape[0]*3/5
+# pid.setpoint = desXCoord
+
+# i = 1
+# angle = 0
+# FAST_SPEED = 1.3
+# SLOW_SPEED = 0.5
+# speed = FAST_SPEED
+# Car.drive(FAST_SPEED)
 
 
 # # You can use kd and kp commands to change KP and KD values.  Default values are good.
 # # loop over frames from Realsense
 j = 0
+
 while(True):
-	Car.drive(FAST_SPEED)
-	(time_, img, depth, accel, gyro) = rs.getData(False)
+	start = time.time()
+	(time_, img, _, accel, gyro) = rs.getData()
 
-	# control loop
-	if i % frameUpdate == 0:
+	smaller_img = cv2.resize(img, (0, 0), fx=0.25, fy=0.25)
 
-		i = 0
-		centers = lm.get_yellow_centers(img)
+	# add timeout around server
+	reply_from_server = sender.send_image(host_name, smaller_img)
+	# print(reply_from_server)
+	print(f"{time.time()- start} s")
 
-		if centers != "None":
-			blobToFollowCoords = centers[-1]
-			blobX = blobToFollowCoords[0]
-			angle = pid(blobX)
-			Car.steer(angle)
-
-	# Display Yellow Centers
-	if draw_bool:
-		lm.draw_centers(img, centers)
-
-	cv2.imshow("car", img)
-
-	i+=1
-	if (cv2.waitKey(1) == ord('q')):
-		cv2.destroyAllWindows()
-		break

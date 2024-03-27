@@ -25,7 +25,7 @@ From the Realsense camera:
 '''
 
 # import the necessary packages
-from hardware.Arduino import Arduino
+from Arduino import Arduino
 from RealSense import *
 import cv2
 import pickle
@@ -38,35 +38,53 @@ rs = RealSense(RS_VGA)
 print("Camera is ready...")
 
 # set up the Car
-Car = Arduino("/dev/ttyUSB0", 115200)                # Linux
-time.sleep(3)
-Car.zero(1440)      # Set car to go straight.  Change this for your car.
-Car.pid(1)          # Use PID control
-print("Car is ready...")
+# Car = Arduino("/dev/ttyUSB0", 115200)                # Linux
+# time.sleep(3)
+# Car.zero(1440)      # Set car to go straight.  Change this for your car.
+# Car.pid(1)          # Use PID control
+# print("Car is ready...")
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 1000000)
+s.settimeout(0.25)
 server_ip = "10.32.114.243"
 server_port = 5555
 print("Client is ready...")
 
-Car.drive(3.0)
+# Car.drive(3.0)
 
 while(True):
 	loopStart = time.time()
 	(time_, img, _, accel, gyro) = rs.getData()
 
-	# Send image to server
-	ret, buffer = cv2.imencode(".jpg", img, [int(cv2.IMWRITE_JPEG_QUALITY), 30])
+
+	# encode the image
+	ret, buffer = cv2.imencode(".jpg", img, [int(cv2.IMWRITE_JPEG_QUALITY), 50])
 	x_as_bytes = pickle.dumps(buffer)
-	s.sendto((x_as_bytes), (server_ip, server_port))
+
+
+	# Send image to server
+	try:
+		s.sendto((x_as_bytes), (server_ip, server_port))
+	except:
+		print("Timeout sending data to server. Continuing")
+		# Car.steer(0.0)
+		continue
+
 
 	# Get steering command from server
-	steerCmdBytes = s.recvfrom(1000000)
-	print(steerCmdBytes)
+	try:
+		server_response = s.recvfrom(1000000)
+		steer_command = int(server_response[0])
+		print(steer_command)
+	except:
+		print("Timeout waiting for server response. Sending another message")
+		# Car.steer(0.0)
+		continue
+
 
 	# Do some steering
-	# Car.steer(steerCmd)
+	# Car.steer(steer_command)
 	
-	print(f"Loop Time: {time.time()- loopStart} s")
 
+	print(f"Loop Time: {time.time()- loopStart} s")

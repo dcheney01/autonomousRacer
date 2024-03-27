@@ -27,6 +27,8 @@ from Arduino import Arduino
 from RealSense import *
 import cv2
 import imagezmq
+import zmq
+import threading
 # from simple_pid import PID
 
 enableDepth = False
@@ -41,9 +43,20 @@ time.sleep(3)
 # Car.pid(1)          # Use PID control
 
 (time_, rgb, depth, accel, gyro) = rs.getData()
+def sender_start(connect_to=None):
+    sender = imagezmq.ImageSender(connect_to=connect_to)
+    # sender.zmq_socket.setsockopt(zmq.LINGER, 0)  # prevents ZMQ hang on exit
+    # # NOTE: because of the way PyZMQ and imageZMQ are implemented, the
+    # #       timeout values specified must be integer constants, not variables.
+    # #       The timeout value is in milliseconds, e.g., 2000 = 2 seconds.
+    # sender.zmq_socket.setsockopt(zmq.RCVTIMEO, 2000)  # set a receive timeout
+    # sender.zmq_socket.setsockopt(zmq.SNDTIMEO, 2000)  # set a send timeout
+    return sender
 
-sender = imagezmq.ImageSender(connect_to='tcp://10.32.114.243:5555')
+server_address = 'tcp://10.32.114.243:5555'
+sender = sender_start(server_address)
 host_name = "LightningMcQueen"
+print("Started Client")
 
 # ## SETUP PID Controller
 # pid = PID()
@@ -68,14 +81,28 @@ host_name = "LightningMcQueen"
 # # loop over frames from Realsense
 j = 0
 
+
+start = time.time()
 while(True):
-	start = time.time()
+	loopStart = time.time()
 	(time_, img, _, accel, gyro) = rs.getData()
 
 	smaller_img = cv2.resize(img, (0, 0), fx=0.25, fy=0.25)
 
-	# add timeout around server
-	reply_from_server = sender.send_image(host_name, smaller_img)
-	# print(reply_from_server)
-	print(f"{time.time()- start} s")
+	if time.time() - start > 0.1:
+		# try:
+		reply_from_server = sender.send_image(host_name, smaller_img)
+		# except (zmq.ZMQError, zmq.ContextTerminated, zmq.Again):
+			# startClose = time.time()
+			# if 'sender' in locals():
+			# 	print('Closing ImageSender.')
+			# 	sender.close()
+			# print('Restarting ImageSender.')
+			# sender = sender_start(server_address)
+			# print(f"Reconnect time: {time.time() - startClose} s\n\n")
+		start = time.time()
+
+
+		# print(reply_from_server)
+	print(f"Loop Time: {time.time()- loopStart} s")
 

@@ -1,11 +1,14 @@
 import os
-
 import cv2
 
 from tqdm import tqdm
 
-input_dir = './tmp/resized_masks'
-output_dir = './tmp/labels'
+input_dir = './resized_tmp/masks/lap3_resized/'
+
+
+output_dir = './resized_tmp/labels/lap3_resized_polygons/'
+if os.path.exists(output_dir) is False:
+    os.makedirs(output_dir)
 
 for j in tqdm(os.listdir(input_dir)):
     image_path = os.path.join(input_dir, j)
@@ -39,3 +42,5 @@ for j in tqdm(os.listdir(input_dir)):
                     f.write('{} '.format(p))
 
         f.close()
+
+    

@@ -3,6 +3,7 @@ from ultralytics import YOLO
 import cv2
 import socket
 import pickle
+import time
 
 model = YOLO('./segmentation/runs/segment/train2/weights/best.pt')
 
@@ -11,7 +12,7 @@ s = socket.socket(socket.AF_INET , socket.SOCK_DGRAM)
 ip = "10.32.114.243"
 port = 5555
 s.bind((ip,port))
-print("Server is started")
+print("Server is started...")
 
 # Set up PID Controller 
 # pid = PID()
@@ -25,13 +26,14 @@ print("Server is started")
 # pid.setpoint = desXCoor
 
 j = 0
+
 while True:
     # Receive message from client
-    client_msg = s.recvfrom(1000000)
-    client_ip = client_msg[1][0]
-    img_bytes = client_msg[0]
-    img_bytes_loaded = pickle.loads(img_bytes)
-    img = cv2.imdecode(img_bytes_loaded, cv2.IMREAD_COLOR) # possibly unnecessary
+    client_msg, client_addr = s.recvfrom(1000000)
+    start = time.time()
+    client_ip = client_addr[0]
+    img_array = pickle.loads(client_msg)
+    img = cv2.imdecode(img_array, cv2.IMREAD_COLOR) # possibly unnecessary
 
     # Get drivable area from image
     result = model.predict(source=img, show=True, verbose=False)
@@ -40,10 +42,8 @@ while True:
     steerCmd = j
 
     # Send steering angle to client
-    s.sendto(str(steerCmd).encode(), (client_ip, port))
+    s.sendto(str(steerCmd).encode(), client_addr)
 
     j += 1
-    cv2.imshow('server', img)
-    if cv2.waitKey(10) == 13:
-        break
-cv2.destroyAllWindows()
+    # cv2.imshow('server', img)
+    print(f"Loop Time: {time.time()-start}")

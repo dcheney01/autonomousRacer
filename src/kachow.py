@@ -13,14 +13,16 @@ class CircleOfExpansionEstimator:
                                 maxLevel = 2,
                                 criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
         
-        self.frames_to_track = 10
+        self.frames_to_track = 50
         self.old_gray = None
         self.current_features = None
         self.initial_features = None
         self.mask = np.zeros((480, 640, 3), dtype=np.uint8)
-        self.x_mask_lim = (100, 540)
-        self.y_mask_lim = (0, 100)
+        self.x_mask_lim = (0, 640)
+        self.y_mask_lim = (0, 150)
         self.tracking_counter = 0
+
+        # self.grid_features = np.array()
 
 
     def find_optical_flow_new_points(self, gray: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
@@ -146,3 +148,5 @@ class CircleOfExpansionEstimator:
             cv2.imshow("img", self.display_img)
             print("\n\n")
         return center
+    
+

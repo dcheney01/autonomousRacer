@@ -19,7 +19,9 @@ s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 s.setblocking(False)
 
 s.settimeout(0.1)
-ip = "10.32.114.243"
+# ip = "10.32.114.243"
+ip = "10.37.102.0"
+
 port = 5555
 s.bind((ip,port))
 print("Server is started...")
@@ -31,8 +33,8 @@ pid.Kd = 0.000
 pid.Kp = -20/320 #degrees per pixel
 frameUpdate = 1
 pid.sample_time = frameUpdate/30.0
-pid.output_limits = (-30,30)
-desXCoord = 640 * 1/2
+pid.output_limits = (-10,10)
+desXCoord = 640 * 1/3
 pid.setpoint = desXCoord
 path_planner = PathPlanner(display=False)
 

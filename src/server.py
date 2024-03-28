@@ -9,6 +9,9 @@ model = YOLO('./segmentation/runs/segment/train2/weights/best.pt')
 
 # Set up server socket
 s = socket.socket(socket.AF_INET , socket.SOCK_DGRAM)
+receive_buffer_size = 25000
+s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 36)
+s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, receive_buffer_size)
 ip = "10.32.114.243"
 port = 5555
 s.bind((ip,port))
@@ -29,7 +32,7 @@ j = 0
 
 while True:
     # Receive message from client
-    client_msg, client_addr = s.recvfrom(1000000)
+    client_msg, client_addr = s.recvfrom(receive_buffer_size)
     start = time.time()
     client_ip = client_addr[0]
     img_array = pickle.loads(client_msg)
@@ -41,7 +44,8 @@ while True:
     # Calculate steering angle
     steerCmd = j
 
-    # Send steering angle to client
+    # Send steering angle to client\
+    # print((str(steerCmd).encode()).__sizeof__())
     s.sendto(str(steerCmd).encode(), client_addr)
 
     j += 1

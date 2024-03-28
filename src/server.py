@@ -11,20 +11,19 @@ import numpy as np
 model = YOLO('./segmentation/runs/segment/train2/weights/best.pt')
 
 # Set up server socket
+print("Listenting for client...")
 s = socket.socket(socket.AF_INET , socket.SOCK_DGRAM)
 receive_buffer_size = 25000
 s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 72)
 s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, receive_buffer_size)
 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 s.setblocking(False)
-
 s.settimeout(0.1)
-# ip = "10.32.114.243"
-ip = "10.37.102.0"
-
+ip = "10.32.114.243"
+# ip = "10.37.102.0"
 port = 5555
 s.bind((ip,port))
-print("Server is started...")
+print(f"Server is ready...")
 
 # Set up PID Controller 
 pid = PID()
@@ -34,9 +33,10 @@ pid.Kp = -20/320 #degrees per pixel
 frameUpdate = 1
 pid.sample_time = frameUpdate/30.0
 pid.output_limits = (-10,10)
-desXCoord = 640 * 1/3
+desXCoord = 640 * 0.5
 pid.setpoint = desXCoord
 path_planner = PathPlanner(display=False)
+print("PID Controller is ready...")
 
 while True:
     try:

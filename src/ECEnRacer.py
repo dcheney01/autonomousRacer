@@ -32,8 +32,6 @@ import pickle
 import socket
 from simple_pid import PID
 
-from kachow import CircleOfExpansionEstimator
-coeEstimator = CircleOfExpansionEstimator(display=False)
 
 # Set up PID Controller 
 pid = PID()
@@ -47,8 +45,16 @@ desXCoord = 640 * 1/3
 pid.setpoint = desXCoord
 
 
+#TURN LOGIC
+turn_order = [0,1,2,3]
+corner_thresholds = [(0.01, .03), (0.01, .03), (0.01, .03), (0.01, .03)]
+corners_thresholds = [corner_thresholds[i] for i in turn_order]
+TURN_COUNTER = 0
+TURNING = False
+
+
 # set up the camera
-rs = RealSense(RS_VGA, enable_depth=True)
+rs = RealSense(RS_VGA, enable_depth=True)	
 rgb = rs.getData()
 print("Camera is ready...")
 
@@ -58,8 +64,6 @@ time.sleep(3)
 Car.zero(1400)      # Set car to go straight.  Change this for your car.
 Car.pid(1)          # Use PID control
 print("Car is ready...")
-
-# coeEstimator = CircleOfExpansionEstimator(display=True)
 
 # s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 # s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 1000000)
@@ -82,57 +86,95 @@ def depth_x(depth_img):
 	return x_coord
 
 
+def we_need_to_turn(blue_mask):
+	global TURN_COUNTER, TURNING
+	blues = np.sum(blue_mask)/(640*480*255)
+
+	low, high = corner_thresholds[TURN_COUNTER]
+
+	#we need to turn if blue mask is over a threshold
+	#we do not need to turn if blue mask is under a threshold. 
+	if blues > high:
+		TURNING = True
+		return True
+	elif blues < low:
+		if TURNING:
+			TURN_COUNTER += 1
+		TURNING = False
+		return False
+	else:
+		#return whatever we were doing last
+		return TURNING
+
+
+
 Car.drive(2.5)
 
 while(True):
 	loopStart = time.time()
-	img = rs.getData()
 
+	rgb, depth = rs.getData(enable_depth=True, enable_rgb=True)
 
-	# encode the image
-	# img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-	img = cv2.resize(img, (160, 120))
-	# print(img.shape)
-	ret, buffer = cv2.imencode(".jpg", img, [int(cv2.IMWRITE_JPEG_QUALITY), 50])
-	x_as_bytes = pickle.dumps(buffer)
-	print(x_as_bytes.__sizeof__())
+	blue_mask = get_blue_mask(rgb)
 
-	# Send image to server
-	try:
-		# print(x_as_bytes.__sizeof__())
-		# s.sendto((x_as_bytes), (server_ip, server_port))
-		s.sendall(x_as_bytes)
-	except:
-		print("Timeout sending data to server. Continuing")
-		Car.drive(0.)
-		# cv2.imwrite('depth.jpg', depth)
-		# Car.steer(0.0)
-		# Car.drive(1.5)
-		continue
+	if we_need_to_turn(blue_mask):
+		#turn logic
+		steer_command = -15
+	else:
+		cur_x = depth_x(depth)
 
-
-	# Get steering command from server
-	try:
-		server_response = s.recvfrom(receive_buffer_size)
-		steer_command = int(server_response[0])
-		Car.drive(2.5)
-		print(steer_command)
-	except Exception as e:
-		# print(f"Timeout waiting for server response. Sending another message. Got {e}")
-
-		start = time.time()
-
-		#get steering angle from depth instead
-		# depth = rs.getData(enable_depth=True, enable_rgb=False)
-		Car.drive(0.)
-
-		print(f"Timeout. SLOWING DOWN. Time to get depth: {time.time() - start}")
-		
-		continue
-
+		steer_command = pid(cur_x)
 
 	# Do some steering
 	Car.steer(steer_command)
-	
 
 	print(f"Loop Time: {time.time()- loopStart} s")
+
+
+
+
+	########## THIS IS ALL OF THE SOCKET STUFF ###################
+	# # encode the image
+	# # img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+	# img = cv2.resize(img, (160, 120))
+	# # print(img.shape)
+	# ret, buffer = cv2.imencode(".jpg", img, [int(cv2.IMWRITE_JPEG_QUALITY), 50])
+	# x_as_bytes = pickle.dumps(buffer)
+	# print(x_as_bytes.__sizeof__())
+
+	# # Send image to server
+	# try:
+	# 	# print(x_as_bytes.__sizeof__())
+	# 	# s.sendto((x_as_bytes), (server_ip, server_port))
+	# 	s.sendall(x_as_bytes)
+	# except:
+	# 	print("Timeout sending data to server. Continuing")
+	# 	Car.drive(0.)
+	# 	# cv2.imwrite('depth.jpg', depth)
+	# 	# Car.steer(0.0)
+	# 	# Car.drive(1.5)
+	# 	continue
+
+
+	# # Get steering command from server
+	# try:
+	# 	server_response = s.recvfrom(receive_buffer_size)
+	# 	steer_command = int(server_response[0])
+	# 	Car.drive(2.5)
+	# 	print(steer_command)
+	# except Exception as e:
+	# 	# print(f"Timeout waiting for server response. Sending another message. Got {e}")
+
+	# 	start = time.time()
+
+	# 	#get steering angle from depth instead
+	# 	# depth = rs.getData(enable_depth=True, enable_rgb=False)
+	# 	Car.drive(0.)
+
+	# 	print(f"Timeout. SLOWING DOWN. Time to get depth: {time.time() - start}")
+		
+	# 	continue
+
+
+	
+

@@ -58,7 +58,7 @@ class RealSense:
     def accel_data(self, accel):
         return np.asarray([accel.x, accel.y, accel.z])
 
-    def getData(self, enable_depth=False, enable_rgb=True):
+    def getData(self, enable_depth=True, enable_rgb=True):
         # start realsense pipeline
         rsframes = self.pipeline.wait_for_frames()
         if enable_rgb:
@@ -82,7 +82,7 @@ class RealSense:
                     depth = cv2.normalize(~np.asanyarray(depth_frame.get_data()), None, 255, 0, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
                     # frame = depth
                     # depth = np.asanyarray(self.colorizer.colorize(depth_frame).get_data())
-        return rgb,depth
+        return rgb, depth
         # if not enable_depth:
         #     return (time.time(), rgb, None, None, None)
         # # return(time.time(), rgb, depth, accel, gyro)

@@ -44,12 +44,26 @@ print("Camera is ready...")
 # Car.pid(1)          # Use PID control
 # print("Car is ready...")
 
-s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 1000000)
-s.settimeout(0.25)
-server_ip = "10.32.114.243"
-server_port = 5555
-print("Client is ready...")
+# s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+# s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 1000000)
+# s.settimeout(0.25)
+# server_ip = "10.32.114.243"
+# server_port = 5555
+# print("Client is ready...")
+
+def get_blue_mask(img):
+	hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+	# threshold on hsv
+	lower = (75, 150, 0)
+	upper = (110, 255, 255)
+	mask = cv2.inRange(hsv, lower, upper)
+	return mask
+
+def depth_x(depth_img):
+	setpoint_y_line = 75
+	x_coord = np.argmin(depth_img[setpoint_y_line,:])
+	return x_coord
+
 
 # Car.drive(3.0)
 

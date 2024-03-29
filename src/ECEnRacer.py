@@ -61,21 +61,26 @@ print("Car is ready...")
 
 # coeEstimator = CircleOfExpansionEstimator(display=True)
 
-s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-receive_buffer_size = 72
-s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 3000)
-s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, receive_buffer_size)
-s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-s.setblocking(False)
-
-s.settimeout(0.15)
-server_ip = "10.37.85.80"
+# s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+# s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 1000000)
+# s.settimeout(0.25)
 # server_ip = "10.32.114.243"
-server_port = 5555
-s.connect((server_ip, server_port))
-print("Client is connected to server...")
+# server_port = 5555
+# print("Client is ready...")
 
-time.sleep(2.0)
+def get_blue_mask(img):
+	hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+	# threshold on hsv
+	lower = (75, 150, 0)
+	upper = (110, 255, 255)
+	mask = cv2.inRange(hsv, lower, upper)
+	return mask
+
+def depth_x(depth_img):
+	setpoint_y_line = 75
+	x_coord = np.argmin(depth_img[setpoint_y_line,:])
+	return x_coord
+
 
 Car.drive(2.5)
 

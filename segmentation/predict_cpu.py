@@ -11,7 +11,7 @@ weights = "/home/curtis/classes/robotic_vision/autonomousRacer/segmentation/best
 segmenter = YOLO(weights, task='segmentation')
 
 #save state dict
-torch.save(segmenter.model.model.state_dict(), 'best.pth')
+torch.save(segmenter.model.state_dict(), 'best.pth')
 
 #print model to text file
 with open('ultralytics.txt', 'w') as f:

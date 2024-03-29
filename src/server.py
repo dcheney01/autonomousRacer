@@ -13,14 +13,14 @@ model = YOLO('./segmentation/runs/segment/train2/weights/best.pt')
 # Set up server socket
 print("Listenting for client...")
 s = socket.socket(socket.AF_INET , socket.SOCK_DGRAM)
-receive_buffer_size = 25000
+receive_buffer_size = 3000
 s.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 72)
 s.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, receive_buffer_size)
 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 s.setblocking(False)
 s.settimeout(0.1)
-ip = "10.32.114.243"
-# ip = "10.37.102.0"
+# ip = "10.32.114.243"
+ip = "10.37.102.0"
 port = 5555
 s.bind((ip,port))
 print(f"Server is ready...")
@@ -45,7 +45,9 @@ while True:
         start = time.time()
         client_ip = client_addr[0]
         img_array = pickle.loads(client_msg)
+        print("Received image from client...")
         img = cv2.imdecode(img_array, cv2.IMREAD_COLOR) # possibly unnecessary
+        img = cv2.resize(img, (640, 480))
 
         # Get drivable area from image
         result = model.predict(source=img, show=False, verbose=False)

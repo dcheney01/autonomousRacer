@@ -7,10 +7,10 @@ from kachow import CircleOfExpansionEstimator
 
 class PathPlanner:
     def __init__(self, display=True) -> None:
-        image = "./00000.png"
-        tmp = cv2.imread(image)
-        self.test_image = cv2.threshold(tmp, 10, 255, cv2.THRESH_BINARY)[1]
-        self.plot_img = tmp.copy()
+        # image = "./00000.png"
+        # tmp = cv2.imread(image)
+        # self.test_image = cv2.threshold(tmp, 10, 255, cv2.THRESH_BINARY)[1]
+        # self.plot_img = tmp.copy()
 
         self.bottom_of_image = 420
 
@@ -30,6 +30,7 @@ class PathPlanner:
             sums.append(sum)
 
         #get the pixel location of max sum
+        # sums.reverse()
         max_sum = max(sums)
         max_sum_index = sums.index(max_sum)
         # print(f"max_sum: {max_sum} @ {max_sum_index * stride} px")
@@ -148,14 +149,14 @@ class PathPlanner:
                 #              2)
 
     def get_line_to_follow(self, image):
-        self.plot_img = image.copy()
+        # self.plot_img = image.copy()
         cropped_img = self._crop_bottom_rectangle(image)
-        self._get_road_boundary_lines(cropped_img)
-        grid_x = self._grid_rectangle(cropped_img)
+        # self._get_road_boundary_lines(cropped_img)
+        # grid_x = self._grid_rectangle(cropped_img)
         convolution_x = self._convolve_rectangle(cropped_img)
         # centroid = self._get_centroid_of_mask(cropped_img)
 
-        return grid_x, convolution_x
+        return convolution_x
 
 
 if __name__ == "__main__":

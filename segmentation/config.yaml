@@ -1,0 +1,7 @@
+path: /home/curtis/classes/robotic_vision/racing/data
+train: images/train
+val: images/val
+
+nc: 1
+names: ["drivable_area"]
+ 

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Autonomous Racer
 
 A Python-based autonomous racing car project that uses computer vision and path planning for autonomous navigation. This project was developed for ECEN-631 at BYU and demonstrates real-time control of a racing vehicle using Intel RealSense camera data and Arduino-based control systems.
@@ -35,3 +36,10 @@ python3 src/ECEnRacer.py
 
 - `src/` - Main source code
 - `segmentation/` - Computer vision modules
+=======
+# autonomousRacer
+
+
+
+# TODOs
+>>>>>>> 4ae1b372ae607db466c51f893428b254ff732b67
